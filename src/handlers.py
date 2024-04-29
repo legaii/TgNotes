@@ -1,10 +1,23 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import MessageHandler, CommandHandler, ConversationHandler, ContextTypes
+from telegram.ext import (
+    MessageHandler,
+    CommandHandler,
+    ConversationHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+)
+from telegram.error import BadRequest
 import telegram.ext.filters as filters
 
 from user_data import UserData
-from item import Item
 
+
+LEFT_ARROW = '<'
+RIGHT_ARROW = '>'
+KEYBOARD = InlineKeyboardMarkup([[
+    InlineKeyboardButton(LEFT_ARROW, callback_data=LEFT_ARROW),
+    InlineKeyboardButton(RIGHT_ARROW, callback_data=RIGHT_ARROW)
+]])
 
 ADDING, EDITING = range(2)
 Context = ContextTypes(user_data=UserData)
@@ -40,24 +53,31 @@ async def cancel_callback(update: Update, context: Context.context) -> int:
 async def delete_main_message(update: Update, context: Context.context) -> None:
     msg_id = context.user_data.main_message_id
     if msg_id is not None:
-        await context.bot.delete_message(chat_id=update.message.chat.id, message_id=msg_id)
+        await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=msg_id)
         context.user_data.main_message_id = None
 
 
 async def update_main_message(update: Update, context: Context.context) -> None:
     msg_id = context.user_data.main_message_id
     if msg_id is not None:
-        await context.bot.edit_message_text(
-            context.user_data.get_main_message_text(),
-            chat_id=update.message.chat.id,
-            message_id=msg_id
-        )
+        try:
+            await context.bot.edit_message_text(
+                context.user_data.get_main_message_text(),
+                chat_id=update.effective_chat.id,
+                message_id=msg_id,
+                reply_markup=KEYBOARD
+            )
+        except BadRequest:
+            pass
 
 
 async def get_all_callback(update: Update, context: Context.context) -> int:
     context.user_data.current_item_id = None
     await delete_main_message(update, context)
-    message = await update.message.reply_text(context.user_data.get_main_message_text())
+    message = await update.message.reply_text(
+        context.user_data.get_main_message_text(),
+        reply_markup=KEYBOARD
+    )
     context.user_data.main_message_id = message.message_id
     return ConversationHandler.END
 
@@ -80,7 +100,7 @@ async def init_add_callback(update: Update, context: Context.context) -> int:
 
 
 async def add_item_callback(update: Update, context: Context.context) -> int:
-    context.user_data.items.append(Item(update.message.text, False))
+    context.user_data.add_item(update.message.text)
     await update_main_message(update, context)
     await update.message.reply_text('Готово!')
     return ConversationHandler.END
@@ -108,11 +128,21 @@ async def delete_item_callback(update: Update, context: Context.context) -> int:
     item_id = context.user_data.current_item_id
     if item_id is None:
         return await item_not_found_error(update, context)
-    context.user_data.items[item_id].deleted = True
+    context.user_data.delete_item(item_id)
     context.user_data.current_item_id = None
     await update_main_message(update, context)
     await update.message.reply_text('Готово!')
     return ConversationHandler.END
+
+
+async def next_page_callback(update: Update, context: Context.context) -> None:
+    context.user_data.next_page()
+    await update_main_message(update, context)
+
+
+async def prev_page_callback(update: Update, context: Context.context) -> None:
+    context.user_data.prev_page()
+    await update_main_message(update, context)
 
 
 help_handler = CommandHandler(['start', 'help'], help_callback)
@@ -124,6 +154,8 @@ add_item_handler = MessageHandler(filters.TEXT, add_item_callback)
 init_edit_handler = CommandHandler('edit', init_edit_callback)
 edit_item_handler = MessageHandler(filters.TEXT, edit_item_callback)
 delete_item_handler = CommandHandler('delete', delete_item_callback)
+next_page_handler = CallbackQueryHandler(next_page_callback, RIGHT_ARROW)
+prev_page_handler = CallbackQueryHandler(prev_page_callback, LEFT_ARROW)
 
 default_handlers = [
     help_handler,
@@ -136,7 +168,7 @@ default_handlers = [
     unknown_command_error,
 ]
 
-main_handler = ConversationHandler(
+conversation_handler = ConversationHandler(
     default_handlers,
     {
         ADDING: [help_handler, cancel_handler, add_item_handler],
@@ -145,3 +177,9 @@ main_handler = ConversationHandler(
     default_handlers,
     name='main_conversation', persistent=True
 )
+
+main_handlers = [
+    next_page_handler,
+    prev_page_handler,
+    conversation_handler,
+]

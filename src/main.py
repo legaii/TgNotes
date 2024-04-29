@@ -1,7 +1,7 @@
 from telegram.ext import Application, ApplicationBuilder
 from pymongo import MongoClient
 from mongo_persistence import MongoPersistence
-from handlers import Context, main_handler
+from handlers import Context, main_handlers
 from telegram_token import TOKEN
 
 
@@ -20,5 +20,6 @@ if __name__ == '__main__':
         .post_shutdown(post_shutdown)
     ).build()
 
-    app.add_handler(main_handler)
+    for handler in main_handlers:
+        app.add_handler(handler)
     app.run_polling()
