@@ -3,6 +3,17 @@
 ### Описание проекта
 Telegram-бот для ведения текстовых заметок.
 
+### Как запустить?
+##### Создаем бота:
+* Создаем telegram-бота через [@BotFather](https://t.me/botfather). Пусть вам дали токен ```XXX```
+* ```echo 'TOKEN = "XXX"' > src/telegram_token.py```
+##### Запускаем базу данных:
+* ```docker pull mongodb/mongodb-community-server:latest```
+* ```docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:latest```
+##### Далее запускаем самого бота:
+* ```pip3 install -r requirements.txt```
+* ```python3 src/main.py```
+
 ### Стек технологий
 * [Python](https://www.python.org/)
 * Библиотека [python-telegram-bot](https://python-telegram-bot.org/)
