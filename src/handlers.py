@@ -156,6 +156,7 @@ edit_item_handler = MessageHandler(filters.TEXT, edit_item_callback)
 delete_item_handler = CommandHandler('delete', delete_item_callback)
 next_page_handler = CallbackQueryHandler(next_page_callback, RIGHT_ARROW)
 prev_page_handler = CallbackQueryHandler(prev_page_callback, LEFT_ARROW)
+unknown_command_handler = MessageHandler(None, unknown_command_error)
 
 default_handlers = [
     help_handler,
@@ -165,7 +166,7 @@ default_handlers = [
     init_add_handler,
     init_edit_handler,
     delete_item_handler,
-    unknown_command_error,
+    unknown_command_handler,
 ]
 
 conversation_handler = ConversationHandler(
