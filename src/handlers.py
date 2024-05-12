@@ -9,7 +9,7 @@ from telegram.ext import (
 from telegram.error import BadRequest
 import telegram.ext.filters as filters
 
-from user_data import UserData
+from .user_data import UserData
 
 
 LEFT_ARROW = '<'

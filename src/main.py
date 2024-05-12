@@ -1,8 +1,8 @@
 from telegram.ext import Application, ApplicationBuilder
 from pymongo import MongoClient
-from mongo_persistence import MongoPersistence
-from handlers import Context, main_handlers
-from telegram_token import TOKEN
+from .mongo_persistence import MongoPersistence
+from .handlers import Context, main_handlers
+from .telegram_token import TOKEN
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 from telegram.ext import BasePersistence
 from pymongo.database import Database
-from user_data import UserData
+from .user_data import UserData
 
 
 class MongoPersistence(BasePersistence):
