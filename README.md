@@ -12,7 +12,7 @@ Telegram-бот для ведения текстовых заметок.
 * ```docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:latest```
 ##### Далее запускаем самого бота:
 * ```pip3 install -r requirements.txt```
-* ```python3 src/main.py```
+* ```python3 -m src.main```
 
 ### Тесты
 * Запуск тестов: ```coverage run --source=src --omit=src/main.py,src/telegram_token.py -m unittest tests/*_test.py```
