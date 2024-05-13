@@ -14,6 +14,18 @@ Telegram-бот для ведения текстовых заметок.
 * ```pip3 install -r requirements.txt```
 * ```python3 src/main.py```
 
+### Тесты
+* Запуск тестов: ```coverage run --source=src --omit=src/main.py,src/telegram_token.py -m unittest tests/*_test.py```
+* Показать процент покрытия: ```coverage report```
+
+| Name                      |    Stmts |     Miss |    Cover |
+|-------------------------- | -------: | -------: | -------: |
+| src/handlers.py           |      107 |        0 |     100% |
+| src/item.py               |       11 |        0 |     100% |
+| src/mongo\_persistence.py |       39 |        0 |     100% |
+| src/user\_data.py         |       41 |        0 |     100% |
+|                 **TOTAL** |  **198** |    **0** | **100%** |
+
 ### Стек технологий
 * [Python](https://www.python.org/)
 * Библиотека [python-telegram-bot](https://python-telegram-bot.org/)
