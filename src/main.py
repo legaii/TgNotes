@@ -8,6 +8,7 @@ from .telegram_token import TOKEN
 if __name__ == '__main__':
     mongo_client = MongoClient()
     async def post_shutdown(app: Application) -> None:
+        """Функция, закрывающая соединение с базой данных"""
         mongo_client.close()
 
 

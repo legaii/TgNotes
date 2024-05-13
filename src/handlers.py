@@ -24,33 +24,44 @@ Context = ContextTypes(user_data=UserData)
 
 
 def get_help_text() -> str:
+    """Возвращает текст, который является инструкцией по пользованию ботом"""
     with open('assets/help.txt') as help_file:
         return help_file.read()
 
 
+# Далее идут функции, являющиеся callback'ами для python-telegram-bot.
+# То есть, все эти функции принимают update и context
+# и возвращают int - новое состояние для ConversationHandler.
+
+
 async def item_not_found_error(update: Update, context: Context.context) -> int:
+    """Отправляет пользователю сообщение об ошибке (некорректный номер карточки) и сбрасывает диалог"""
     await update.message.reply_text('Карточка не найдена')
     return ConversationHandler.END
 
 
 async def unknown_command_error(update: Update, context: Context.context) -> int:
+    """Отправляет пользователю сообщение об ошибке (неизвестная команда) и сбрасывает диалог"""
     await update.message.reply_text('Неизвестная команда')
     return ConversationHandler.END
 
 
 async def help_callback(update: Update, context: Context.context) -> int:
+    """Отправляет пользователю инструкцию по пользованию ботом и сбрасывает диалог"""
     context.user_data.current_item_id = None
     await update.message.reply_text(get_help_text())
     return ConversationHandler.END
 
 
 async def cancel_callback(update: Update, context: Context.context) -> int:
+    """Сбрасывает диалог"""
     context.user_data.current_item_id = None
     await update.message.reply_text('Операция успешно отменена')
     return ConversationHandler.END
 
 
 async def delete_main_message(update: Update, context: Context.context) -> None:
+    """Удаляет сообщение со списком карточек (если оно существует)"""
     msg_id = context.user_data.main_message_id
     if msg_id is not None:
         await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=msg_id)
@@ -58,6 +69,7 @@ async def delete_main_message(update: Update, context: Context.context) -> None:
 
 
 async def update_main_message(update: Update, context: Context.context) -> None:
+    """Обновляет сообщение со списком карточек (если оно существует)"""
     msg_id = context.user_data.main_message_id
     if msg_id is not None:
         try:
@@ -72,6 +84,7 @@ async def update_main_message(update: Update, context: Context.context) -> None:
 
 
 async def get_all_callback(update: Update, context: Context.context) -> int:
+    """Присылает пользователю новое сообщение со списком карточек (удаляя старое) и сбрасывает диалог"""
     context.user_data.current_item_id = None
     await delete_main_message(update, context)
     message = await update.message.reply_text(
@@ -83,6 +96,7 @@ async def get_all_callback(update: Update, context: Context.context) -> int:
 
 
 async def get_item_callback(update: Update, context: Context.context) -> int:
+    """Присылает пользователю информацию о карточке с номером n (если пользователь отправил команду /n) и сбрасывает диалог"""
     item_id = int(context.matches[0].group(1))
     context.user_data.current_item_id = item_id
     items = context.user_data.items
@@ -94,12 +108,14 @@ async def get_item_callback(update: Update, context: Context.context) -> int:
 
 
 async def init_add_callback(update: Update, context: Context.context) -> int:
+    """Переводит диалог в состояние ожидания текста для новой карточки"""
     context.user_data.current_item_id = None
     await update.message.reply_text('Введите текст:')
     return ADDING
 
 
 async def add_item_callback(update: Update, context: Context.context) -> int:
+    """Создает новую карточку с текстом, который отправил пользователь, и сбрасывает диалог"""
     context.user_data.add_item(update.message.text)
     await update_main_message(update, context)
     await update.message.reply_text('Готово!')
@@ -107,6 +123,7 @@ async def add_item_callback(update: Update, context: Context.context) -> int:
 
 
 async def init_edit_callback(update: Update, context: Context.context) -> int:
+    """Переводит диалог в состояние ожидания нового текста для старой карточки"""
     if context.user_data.current_item_id is None:
         return await item_not_found_error(update, context)
     await update.message.reply_text('Введите новый текст:')
@@ -114,6 +131,7 @@ async def init_edit_callback(update: Update, context: Context.context) -> int:
 
 
 async def edit_item_callback(update: Update, context: Context.context) -> int:
+    """Меняет текст текущей карточки на тот, который отправил пользователь, и сбрасывает диалог"""
     item_id = context.user_data.current_item_id
     if item_id is None:
         return await item_not_found_error(update, context)
@@ -125,6 +143,7 @@ async def edit_item_callback(update: Update, context: Context.context) -> int:
 
 
 async def delete_item_callback(update: Update, context: Context.context) -> int:
+    """Удаляет текущую карточку и сбрасывает диалог"""
     item_id = context.user_data.current_item_id
     if item_id is None:
         return await item_not_found_error(update, context)
@@ -136,11 +155,13 @@ async def delete_item_callback(update: Update, context: Context.context) -> int:
 
 
 async def next_page_callback(update: Update, context: Context.context) -> None:
+    """Перелистывает сообщение со списком карточек на следующую страницу"""
     context.user_data.next_page()
     await update_main_message(update, context)
 
 
 async def prev_page_callback(update: Update, context: Context.context) -> None:
+    """Перелистывает сообщение со списком карточек на предыдущую страницу"""
     context.user_data.prev_page()
     await update_main_message(update, context)
 
